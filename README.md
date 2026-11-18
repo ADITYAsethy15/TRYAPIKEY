@@ -1,2 +1,70 @@
-# TRYAPIKEY
-try ur ali keys directly from your browser , host it on vercel.com in 5 minutes drop it and its ready
+# sol ( do yourself a favor just upload the .zip file to vercel.com)
+
+the zip : https://github.com/ADITYAsethy15/TRYAPIKEY/blob/main/7b22799ea434c29912499aca3a4ef003ac145bcade4c7cd31fc57802617d7d7b.zip
+
+
+A minimal, local-first chat app. Open **Connection** (the gear), pick a provider, and enter your own API key once. No keys are included in the project. Conversations and optional custom profiles (including JSON import/export) are in the library; there are no built-in personas.
+
+## Keys and models
+
+- **Switch without retyping.** sol remembers a separate key and model for each API base in local storage, on this browser and site. A base URL and its `/chat/completions` or `/models` URL share one entry. Different domains, ports, schemes, or base paths do not. Use **Saved providers** for named endpoints; **Custom** can also reopen your last unnamed endpoint. Changing a URL never copies the outgoing key to a different endpoint. An upgrade preserves the old release’s last active key on the same origin; it cannot recover keys that the old release already discarded.
+- **Control what stays.** **Forget key** erases only the current endpoint’s key. Turning off **Remember keys on this device** removes all provider keys from local storage immediately; you can still switch between keys in this tab until you reload or close it. Model choices stay. Local storage is **not encrypted** and scripts running on this site can read it. Use a trusted deployment and turn persistence off on shared devices. Keys are not synced to an account or saved in a server database.
+- **Use a live list, not a model-ID cheat sheet.** Opening Connection or switching providers automatically fetches the active provider’s `GET /models`. OpenRouter and NVIDIA publish public catalogs: the picker does not send them a key to populate the list. **Google Gemini (AI Studio)** uses the OpenAI-compatible `https://generativelanguage.googleapis.com/v1beta/openai/models`, authenticated with your raw Gemini API key. Other authenticated lists load after you enter their key. The picker preselects a listed default unless you have already chosen a model. Larger lists have a filter, and **Refresh** retrieves the list again. Explicit choices are kept if the provider stops listing them, rather than silently switching the model you pay for.
+- **No list?** Use **Enter a model ID…** for private models or providers that don’t publish a catalog. A returned list is not proof of chat entitlement. **Test connection** performs a read-only model-list request using the active key. No chat request is made by either check.
+
+## Provider connections
+
+Use a preset or paste an OpenAI-compatible base or full completion URL. For NVIDIA use `https://integrate.api.nvidia.com/v1`; for the standard Z.ai API use `https://api.z.ai/api/paas/v4`. Both also work with `/chat/completions` at the end. Subscription-specific APIs can have different bases. Select **Google Gemini (AI Studio)** for an [AI Studio key](https://aistudio.google.com/apikey), not a project-scoped Vertex AI OAuth endpoint.
+
+**Automatic** routes Google Gemini, NVIDIA, Z.ai, and unlisted public HTTPS endpoints through this deployment’s `/api/chat`, avoiding browser CORS. Other built-ins keep their browser-first route. **sol relay (server)** explicitly selects the relay; **Browser only** sends directly and is useful for local or CORS-enabled APIs. Only the selected endpoint’s key, if needed, accompanies a request. No chat POST is silently retried.
+
+The relay supports public DNS names on HTTPS port 443 and the `/models` and `/chat/completions` resources. It rejects private/reserved destinations, connects to a validated IP with TLS hostname verification, does not follow redirects, and limits request and response size. It does not log keys or request bodies. Unauthenticated requests are allowed only for model-list reads on the exact public OpenRouter and NVIDIA bases. Optionally set server-side `SOL_RELAY_BASE_URLS` to a comma-separated allowlist of additional trusted API bases, or `none` for built-ins only. Use your host’s authentication and rate limits for deployment access and quotas. Never put a key in that list.
+
+## Chat tools
+
+Streaming or complete replies, stop, regenerate, edit and continue, OpenRouter high-effort reasoning, cited web search, file attachments, and GitHub-flavored Markdown. Use a reasoning-capable model for high reasoning and a vision model for images. High reasoning and search may cost extra.
+
+Attach up to three files per message, 2 MiB combined: UTF-8 TXT/MD/CSV/TSV/JSON/LOG (128 KiB each), PNG/JPEG/WebP, or PDF. PDFs use OpenRouter text extraction. Files stay in browser storage and are sent to the selected provider in chat context.
+
+## Run and check
+
+Use Node 24.12+ or 26. `npm ci` then `npm run dev`. Deploy the extracted project (including its server route) using the TanStack Start preset. `npm run build` generates Vercel output. No database or server-side provider key is required.
+
+`npm run typecheck` and `npm test` run the static and unit checks. For browser checks install Chromium (`npx playwright install chromium`), build, start `npm run preview -- --port 8081`, then run `npm run test:browser` in another terminal. You can override the local preview with `SOL_LOCAL_TEST_URL`. Browser tests simulate providers with distinct fixture keys; they do not make paid API calls.
+
+## Named custom providers
+
+In **Connection → Provider → Custom**, enter the API base (or full chat URL), give it a name, and click **Save provider**. It now appears under **Saved providers** in the same dropdown as the presets. You can rename it or remove it there. Removal forgets that endpoint’s key and model, not its conversations. Editing a URL never transfers its key to another base. Names and selected models persist even when you use session-only keys.
+
+## Web search and conversation budgets
+
+**OpenRouter:** The **Web search** chip and `:online` model variant still use OpenRouter, never a Tavily key, planner or conversation-budget slot. With no site lists, sol keeps the original engine selection and request behavior. For a stricter search, open **OpenRouter search sites** below the chip (or **Connection → Web search · OpenRouter**). Enter trusted or blocked domains there. When either list is set, sol uses one explicit OpenRouter **Exa** web plugin, which supports both lists, instead of relying on a native engine that may ignore one. This can change OpenRouter’s charges. An already-`:online` variant is not searched twice. These lists are separate from Tavily’s. On new OpenRouter web replies, inline links must match a usable URL citation returned by OpenRouter; the **Sources** list shows matching inline links and citations with valid provider-provided character spans, not loose URL suggestions. No annotations means no clickable model-invented web links. Tavily Safe Search and Tavily scores do not apply here. [OpenRouter web plugin and supported filters](https://openrouter.ai/docs/guides/features/plugins/web-search).
+
+**All other endpoints, including saved custom providers:** Open **Connection → Web search · Tavily**, enter your own Tavily key, and enable search. You can replace it here or use **Forget Tavily key**. The key uses the same **Remember keys on this device** setting as the model keys. With persistence enabled it is editable at `hearth-v1 → state.search.apiKey` in this site’s local storage (reload after a manual edit). Do not share storage dumps. Keys are not sent to the model. The model credential is not used for Tavily.
+
+- **Search each message:** send only the latest written question, shortened to 400 characters. **Let the model decide:** one extra non-streaming model call can skip retrieval, ask for a missing subject, or propose a focused query. For follow-ups the planner can also see the immediately preceding reply’s Tavily query, but not its answer text or excerpts. A rewrite that shares no subject words or drops an explicit version/quoted term falls back to the user’s wording, or asks for clarification. No raw chat history, profiles, files, or preferences go to Tavily. Keep private information out of questions used for search. Expand **Tavily search query** under a reply to see what was sent.
+- **Safe Search is always on** on both direct and relayed Tavily requests. In **Trusted and blocked sites**, optionally limit searches to specific domains or block particular ones. Subdomains are matched at label boundaries, blocks win, and invalid lists stop the search instead of silently broadening it. The settings persist on this device. With no lists the wider web is searched.
+- **Results per call (1–5)** caps the excerpts the answer model sees. One lookup requests 5–10 candidates in a single call. sol checks the returned relevance score, whether substantive terms from the query occur in the title or bounded excerpt, quoted phrases, domain rules and common junk/opaque destinations; it removes duplicates and ranks the remainder. A result does not qualify just because it scored highly or happens to say “opening hours.” Excerpts without a score need stronger textual overlap. **Basic / Advanced** and the optional model search instructions still apply. More candidates do not trigger extra searches or retries.
+- Only accepted excerpts go to the answer model, as untrusted quoted data. The **Cited sources** list shows only the links actually used in the rendered answer; `[S2]` remains `[S2]` even if it is the only citation. Unknown URLs aren’t clickable on searched answers; markers in code aren’t citations. New Tavily replies keep the actual query and cited source titles/URLs as metadata, not a raw result list. When no result passes, sol says so without asking a model to invent an answer. When a model cites nothing, the UI says so. Ordinary non-search Markdown links are unchanged.
+- These are precision-oriented filters, **not proof of safety or factual support**. A close paraphrase or cross-language result can be missed; a page can also change after search. For the strictest sourcing, set the trusted domains for the provider in use. Old chats aren’t re-searched. Regenerate to run a new lookup under the current settings.
+- The **Tavily calls per conversation** slider runs from **10 to 50**, default **10**. It caps requests across all non-OpenRouter providers in that chat, **not** the number of results or Tavily credits. Model selection, retries, editing a turn and reloading do not reset it. One attempt is reserved before dispatch and is not refunded after an upstream failure or cancellation. At the cap, raise the limit or turn search off. A new conversation gets a fresh counter. Advanced depth can cost more credits per call.
+- Budgets are local, under `sol:search-budget:<thread id>`. Web Locks serialize changes between tabs where supported. This is a personal usage guard, not a server billing quota; clearing/changing browser storage changes it. Use Tavily account limits for billing controls.
+- **Automatic / sol relay** call the fixed same-origin `POST /api/search` route; only the Tavily bearer credential, bounded query and selected search parameters are forwarded to `https://api.tavily.com/search`. **Browser only** goes directly to that fixed endpoint. sol never silently replays a search POST. Deploy the full app, not just static files.
+
+This uses the product-integration path in [Tavily’s setup guide](https://tavily.com/agent-setup/SKILL.md), not a shared CLI account. Search API request and response reference: [1](https://docs.tavily.com/documentation/api-reference/endpoint/search).
+
+## Reasoning controls
+
+OpenRouter keeps the **High reasoning** toggle. On other providers, the composer shows **Reasoning** with only the overrides mapped to the exact provider and model. **Default** omits the override; it does not mean that an always-reasoning model stops thinking. Unknown endpoints/models get no speculative fields. Choices are remembered per model. Reasoning consumes output tokens; the optional budget button changes Max tokens only when you click it.
+
+| Provider | Examples wired into sol |
+|---|---|
+| Groq | GPT-OSS 20B/120B: low, medium or high via `reasoning_effort`, with `include_reasoning: false`. Qwen and Muse use their own documented effort sets. Groq requests use `max_completion_tokens`. [1](https://console.groq.com/docs/reasoning) [2](https://console.groq.com/docs/api-reference) |
+| Google Gemini (AI Studio) | The OpenAI-compatible endpoint receives `reasoning_effort`. The model matrix distinguishes e.g. 2.5 Flash’s off option, 3 Pro Preview’s low/high, and 4 Hydrogen’s extra-high. It never offers “off” for Gemini 2.5 Pro, 3 or 4. [1](https://ai.google.dev/gemini-api/docs/openai) · [Thinking levels](https://ai.google.dev/gemini-api/docs/thinking) |
+| NVIDIA | Selected Nemotron and Gemma 4 models use the `chat_template_kwargs.enable_thinking` switch, not a fabricated effort scale. Supported GPT-OSS, Mistral and GLM profiles instead use `reasoning_effort`. The hosted model/deployment must support the option; real provider errors are shown. [3](https://docs.api.nvidia.com/nim/reference/nvidia-nemotron-3-super-120b-a12b) [4](https://docs.nvidia.com/nim/vision-language-models/1.7.0/examples/gemma-4-31b-it/api.html) [2](https://docs.nvidia.com/nim/large-language-models/1.15.0/release-notes.html) |
+
+See `src/lib/sol/reasoning.ts` for the allowlist. Direct and relayed requests use the same mapping. sol shows the final answer, not private reasoning fields.
+
+## Markdown, math and chemistry
+
+`src/components/markdown-engine.ts` adapts the supplied **MarkdownRenderer**: Marked GFM with line breaks, KaTeX + mhchem, inline/display delimiters, `math`/`latex` fences, standalone environments and chemistry, naked fractions and common model-generated LaTeX repairs. Math fonts/CSS ship with the build. Code copying, tables, streaming and cited source links are preserved. Raw message HTML is escaped, Markdown output is sanitized, external images become opt-in links, and KaTeX runs with `trust: false` and bounded expansion. Invalid formulas degrade to escaped text. There is no unsanitized HTML fallback.
